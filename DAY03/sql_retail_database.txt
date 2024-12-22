@@ -1,0 +1,83 @@
+create database retail;
+use retail;
+
+salespeople table
++------+---------+-----------+------+
+| snum | sname   | city      | comm |
++------+---------+-----------+------+
+| 1001 | peel    | london    | 0.12 |
+| 1002 | serres  | san jose  | 0.13 |
+| 1003 | axelrod | new york  | 0.10 |
+| 1004 | motika  | london    | 0.11 |
+| 1005 | fran    | london    | 0.26 |
+| 1007 | rifkin  | barcelona | 0.15 |
++------+---------+-----------+------+
+
+customer table
++------+----------+----------+--------+------+
+| cnum | cname    | city     | rating | snum |
++------+----------+----------+--------+------+
+| 2001 | hoffman  | london   |    100 | 1001 |
+| 2002 | giovanni | rome     |    200 | 1003 |
+| 2003 | liu      | san jose |    200 | 1002 |
+| 2004 | grass    | berlin   |    300 | 1002 |
+| 2006 | clemens  | london   |    100 | 1001 |
+| 2007 | pereira  | rome     |    100 | 1004 |
+| 2008 | cisneros | san jone |    300 | 1007 |
++------+----------+----------+--------+------+
+
+order table
++------+---------+------------+------+
+| onum | amt     | odate      | cnum |
++------+---------+------------+------+
+| 3001 |   18.69 | 1996-03-10 | 2008 |
+| 3002 | 1900.10 | 1996-10-03 | 2007 |
+| 3003 |  767.19 | 1996-10-03 | 2001 |
+| 3005 | 5160.45 | 1996-10-03 | 2003 |
+| 3006 | 1098.16 | 1996-10-03 | 2008 |
+| 3007 |   75.75 | 1996-10-04 | 2002 |
+| 3008 | 4723.00 | 1996-10-05 | 2006 |
+| 3009 | 1713.23 | 1996-10-04 | 2002 |
+| 3010 | 1309.95 | 1996-10-06 | 2004 |
+| 3011 | 9891.88 | 1996-10-06 | 2006 |
++------+---------+------------+------+
+
+Questions
+Q1: Find the number of customers for each salesperson
+Ans: SELECT s.sname AS Salesperson, COUNT(c.cnum) AS Number_of_Customers FROM salespeople s
+     LEFT JOIN customer c ON s.snum = c.snum GROUP BY s.sname;
+
+Q2: Best Salesperson based on customer rating
+Ans: SELECT s.sname AS Best_Salesperson, AVG(c.rating) AS Avg_Customer_Rating FROM salespeople s
+     JOIN customer c ON s.snum = c.snum GROUP BY s.sname ORDER BY Avg_Customer_Rating DESC;
+
+Q3: To whom we need to fire from the salespeople team
+Ans: SELECT s.sname AS Salesperson, COUNT(c.cnum) AS Number_of_Customers,
+     COALESCE(AVG(c.rating), 0) AS Avg_Customer_Rating FROM salespeople s
+     LEFT JOIN customer c ON s.snum = c.snum GROUP BY s.sname
+     HAVING Number_of_Customers = 0 OR Avg_Customer_Rating < 100;
+
+Q4: Who has less customer rating
+ans: SELECT s.sname AS Salesperson, AVG(c.rating) AS Avg_Customer_Rating FROM salespeople s
+     JOIN customer c ON s.snum = c.snum GROUP BY s.sname ORDER BY Avg_Customer_Rating ASC LIMIT 1;
+
+Q5: Display salespeople who have customers from the same city
+Ans: SELECT DISTINCT s.sname AS Salesperson, s.city AS Salesperson_City, c.cname AS Customer_Name,
+     c.city AS Customer_City FROM salespeople s JOIN customer c ON s.snum = c.snum
+      WHERE s.city = c.city;
+
+Q6: Find the names and numbers of all salespeople who had more than one customer
+Ans: SELECT s.sname AS Salesperson, s.snum AS Salesperson_Number, COUNT(c.cnum) AS Number_of_Customers
+     FROM salespeople s JOIN customer c ON s.snum = c.snum  GROUP BY s.sname, s.snum
+     HAVING Number_of_Customers > 1;
+
+Q7: Find customers in San Jose who have a rating above 200
+Ans: SELECT c.cname AS Customer_Name, c.rating AS Rating FROM customer c
+     WHERE c.city = 'San Jose' AND c.rating > 200;
+
+Q8: List all customers with ratings above San Jose’s average
+Ans: SELECT c.cname AS Customer_Name, c.rating AS Rating, c.city AS City FROM customer c
+     WHERE c.rating > (
+    SELECT AVG(c.rating) AS Avg_Rating_San_Jose
+    FROM customer
+    WHERE city = 'San Jose');
